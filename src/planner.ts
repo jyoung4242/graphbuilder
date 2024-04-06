@@ -35,17 +35,18 @@ export class Planner {
   ) {
     let level = levelcount + 1;
     let branchcnt = branch;
-    let incomingstate = structuredClone(worldstate);
+    //let incomingstate = structuredClone(worldstate);
 
+    let incomingstate = Object.assign({}, worldstate);
     console.log("level", level, "branch", branch, "useableActions", useableActions.length);
 
     for (let i = 0; i < useableActions.length; i++) {
       branchcnt = i;
+
       console.log("branchcnt", branchcnt);
 
       let nodestring = `node level:${level} branch:${branchcnt}`;
       const action = useableActions[i];
-      console.log("incomingstate", structuredClone(incomingstate));
 
       console.log("action", action);
 
@@ -76,7 +77,10 @@ export class Planner {
         return;
       }
 
-      this.buildGraph(nextnode!, newuseableActions, newState, graph, goal, level, branchcnt);
+      //make a copy of newstate
+      //const newStateCopy = structuredClone(newState);
+      const newStateCopy = Object.assign({}, newState);
+      this.buildGraph(nextnode!, newuseableActions, newStateCopy, graph, goal, level, branchcnt);
     }
   }
 
