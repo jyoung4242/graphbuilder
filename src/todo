@@ -1,6 +1,6 @@
 [x] different data types in world state
 [x] partial state effects, not whole state map
 [x] incorporate agent state
-[ ] test multiple agents
+[x] test multiple agents
 [ ] consider adding astar to Graphnode
 [x] convert direct key/pair evaluation to a callback that returns pass/fail

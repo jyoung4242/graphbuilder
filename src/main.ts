@@ -29,11 +29,8 @@ const p2config: iAgent = {
   goals: [p2Goal],
 };
 const p2 = new Agent(p2config);
-
-console.log("player agent", player);
-
-//const newplan = player.planner.plan();
+const newplan = player.planner.plan();
 const p2plan = p2.planner.plan();
 
-//console.log("newplan", newplan);
+console.log("newplan", newplan);
 console.log("p2plan", p2plan);

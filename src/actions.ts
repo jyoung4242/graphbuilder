@@ -28,8 +28,6 @@ export const action1 = new MyAction(
   },
 
   (s: actionstate) => {
-    console.log(s);
-
     return s.value1 == 0 && s.value2 == 1 && s.value3 == 2 && s.value4;
   }
 );
@@ -85,12 +83,9 @@ export const action6 = new MyAction(
   "action6",
   1,
   (s: actionstate) => {
-    console.log("s", structuredClone(s));
-
     s.value1 = s.value1 - 1;
     s.value2 = s.value2 - 1;
     s.value3 = s.value3 - 4;
-    console.log("s", structuredClone(s));
   },
   (s: actionstate) => {
     return s.value1 == 0 && s.value2 == 1 && s.value3 == 2 && s.value4;

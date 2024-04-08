@@ -33,50 +33,38 @@ export class Planner {
     levelcount: number,
     branch: number
   ) {
+    let origState: actionstate = {};
+    if (levelcount == 0) origState = structuredClone(worldstate);
+
     let level = levelcount + 1;
     let branchcnt = branch;
-    //let incomingstate = structuredClone(worldstate);
 
     let incomingstate = Object.assign({}, worldstate);
-    console.log("level", level, "branch", branch, "useableActions", useableActions.length);
 
     for (let i = 0; i < useableActions.length; i++) {
       branchcnt = i;
 
-      console.log("branchcnt", branchcnt);
-
-      let nodestring = `node level:${level} branch:${branchcnt}`;
+      let nodestring = `node -> level:${level} branch:${branchcnt}`;
       const action = useableActions[i];
-
-      console.log("action", action);
-
+      if (level == 1) incomingstate = origState;
       const newState = this.modifyState(incomingstate, action.effect);
-      console.log("newState", newState);
-
       const newuseableActions = this.actions.filter(action => action.isAcheivable(newState));
-      console.log("newuseableActions initial", newuseableActions);
       let nextnode;
-      if (this.checkIfGoalReached(goal, newState)) {
-        console.log("end of branch, reached goal", goal);
 
+      if (this.checkIfGoalReached(goal, newState)) {
         graph.addNode({ id: `endnode_${this.numEndNodes}`, value: { world: newState, state: this.agentState, action: action } });
         nextnode = graph.getNodes().get(`endnode_${this.numEndNodes}`);
         const edgeString = `edge from:${startnode.id} to:endnode_${this.numEndNodes}`;
         graph.addEdge({ name: edgeString, from: startnode, to: nextnode!, value: action.cost });
         this.numEndNodes++;
-        return;
+        continue;
       } else {
         graph.addNode({ id: nodestring, value: { world: incomingstate, state: this.agentState, action: action } });
         nextnode = graph.getNodes().get(nodestring);
         const edgeString = `edge from:${startnode.id} to:${nextnode?.id}`;
         graph.addEdge({ name: edgeString, from: startnode, to: nextnode!, value: action.cost });
       }
-
-      console.log("newuseableActions after", newuseableActions);
-      if (newuseableActions.length === 0) {
-        return;
-      }
-
+      if (newuseableActions.length === 0) continue;
       //make a copy of newstate
       //const newStateCopy = structuredClone(newState);
       const newStateCopy = Object.assign({}, newState);
@@ -85,14 +73,13 @@ export class Planner {
   }
 
   checkIfGoalReached(goal: Goal, state: actionstate): boolean {
-    console.log("checkIfGoalReached", goal, state);
-
     return JSON.stringify(state) === JSON.stringify(goal.targetState);
   }
 
   modifyState(world: actionstate, effect: effectCallback): actionstate {
-    effect(world);
-    return world;
+    const newState = structuredClone(world);
+    effect(newState);
+    return newState;
   }
 
   cheapestPath(graph: ExcaliburGraph): MyAction[] {
@@ -102,13 +89,9 @@ export class Planner {
     graph.nodes.forEach(node => {
       let testString: string[] = [];
       if (typeof node.id == "string") testString = node.id.split("_");
-
-      if (testString[0] === "endnode") {
-        endnodes.push(node);
-      }
+      if (testString[0] === "endnode") endnodes.push(node);
     });
     if (endnodes.length === 0) return [];
-    console.log("endnodes", endnodes);
 
     //test each shortest path between startnode and each endnode and return the lowest cost path
     let lowestCost = Infinity;
@@ -116,7 +99,6 @@ export class Planner {
 
     endnodes.forEach(node => {
       const path = graph.shortestPath(startnode!, node);
-      console.log("path", path);
 
       //add up costs of path
       let cost = 0;
@@ -133,8 +115,6 @@ export class Planner {
       }
     });
 
-    console.log("lowestCost", lowestCost);
-    console.log("cheapest endnode", cheapestEndNode);
     let cheapestPlan = graph.shortestPath(startnode!, cheapestEndNode!);
     let actionPlan = cheapestPlan.map(node => {
       return node.value.action;
@@ -152,7 +132,6 @@ export class Planner {
 
     //get list of usable actions
     const useableActions = this.actions.filter(action => action.isAcheivable(this.world));
-    console.log("initial filtered actions", useableActions);
 
     this.graph.addNode({
       id: "startnode",
@@ -160,9 +139,6 @@ export class Planner {
     });
 
     this.buildGraph(this.graph.getNodes().get("startnode")!, useableActions, this.world, this.graph, bestGoal, 0, 0);
-
-    console.log("End graph", this.graph);
-
     // iterate over tree graph and find cheapest path that satisfies all goals
     const actionplan = this.cheapestPath(this.graph);
 
